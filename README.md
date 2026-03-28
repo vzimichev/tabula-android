@@ -5,6 +5,44 @@ tabula-java [![Build Status](https://travis-ci.org/tabulapdf/tabula-java.svg?bra
 
 © 2014-2020 Manuel Aristarán. Available under MIT License. See [`LICENSE`](LICENSE).
 
+## Android Port
+
+This fork is adapted to run as an Android library using [`pdfbox-android`](https://github.com/TomRoush/PdfBox-Android).
+
+- Library module: project root
+- Sample app: [`app`](app)
+- Instrumented regression smoke tests: [`src/androidTest`](src/androidTest)
+
+### Build
+
+```bash
+./gradlew compileDebugJavaWithJavac
+./gradlew :app:assembleDebug
+./gradlew connectedDebugAndroidTest
+```
+
+### Android Usage
+
+Initialize PDFBox once in your `Application` or `Activity`:
+
+```java
+PDFBoxResourceLoader.init(context);
+```
+
+Then load a PDF and extract tables:
+
+```java
+try (InputStream input = context.getContentResolver().openInputStream(uri);
+     PDDocument document = PDDocument.load(input);
+     ObjectExtractor extractor = new ObjectExtractor(document)) {
+    Page page = extractor.extract(1);
+    List<Table> tables = new SpreadsheetExtractionAlgorithm().extract(page);
+    if (tables.isEmpty()) {
+        tables = new BasicExtractionAlgorithm().extract(page);
+    }
+}
+```
+
 ## Download
 
 Download a version of the tabula-java's jar, with all dependencies included, that works on Mac, Windows and Linux from our [releases page](../../releases).

@@ -1,8 +1,5 @@
 package technology.tabula;
 
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,6 +8,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+
+import technology.tabula.geom.Line2D;
+import technology.tabula.geom.Point2D;
+import technology.tabula.geom.Rectangle2D;
 
 @SuppressWarnings("serial")
 public class Ruling extends Line2D.Float {
@@ -177,7 +178,7 @@ public class Ruling extends Line2D.Float {
     }
     
     public Ruling intersect(Rectangle2D clip) {
-        Line2D.Float clipee = (Line2D.Float) this.clone();
+        Line2D.Float clipee = new Line2D.Float(this.getP1(), this.getP2());
         boolean clipped = new CohenSutherlandClipping(clip).clip(clipee);
 
         if (clipped) {
@@ -189,7 +190,7 @@ public class Ruling extends Line2D.Float {
     }
     
     public Ruling expand(float amount) {
-        Ruling r = (Ruling) this.clone();
+        Ruling r = new Ruling(this.getP1(), this.getP2());
         r.setStart(this.getStart() - amount);
         r.setEnd(this.getEnd() + amount);
         return r;

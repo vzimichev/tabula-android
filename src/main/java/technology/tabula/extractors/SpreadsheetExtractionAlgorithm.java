@@ -2,8 +2,9 @@ package technology.tabula.extractors;
 
 import technology.tabula.*;
 
-import java.awt.geom.Point2D;
 import java.util.*;
+
+import technology.tabula.geom.Point2D;
 
 /**
  * @author manuel

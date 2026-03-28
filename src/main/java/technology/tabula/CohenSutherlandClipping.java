@@ -11,8 +11,8 @@
  */
 package technology.tabula;
 
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.Line2D;
+import technology.tabula.geom.Line2D;
+import technology.tabula.geom.Rectangle2D;
 
 /**
  * Implements the well known Cohen Sutherland line

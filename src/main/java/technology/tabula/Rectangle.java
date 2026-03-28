@@ -1,10 +1,11 @@
 package technology.tabula;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+
+import technology.tabula.geom.Point2D;
+import technology.tabula.geom.Rectangle2D;
 
 @SuppressWarnings("serial")
 public class Rectangle extends Rectangle2D.Float {

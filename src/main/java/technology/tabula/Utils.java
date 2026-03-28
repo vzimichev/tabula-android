@@ -1,19 +1,21 @@
 package technology.tabula;
 
-import java.awt.Shape;
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
+
+import android.graphics.Bitmap;
+
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.rendering.ImageType;
+import com.tom_roush.pdfbox.rendering.PDFRenderer;
+
+import technology.tabula.geom.Line2D;
+import technology.tabula.geom.Point2D;
+import technology.tabula.geom.Rectangle2D;
 
 /**
  * @author manuel
@@ -44,12 +46,12 @@ public class Utils {
         return bd.floatValue();
     }
 
-    public static Rectangle bounds(Collection<? extends Shape> shapes) {
+    public static Rectangle bounds(Collection<? extends Rectangle> shapes) {
         if (shapes.isEmpty()) {
             throw new IllegalArgumentException("shapes can't be empty");
         }
 
-        Iterator<? extends Shape> iter = shapes.iterator();
+        Iterator<? extends Rectangle> iter = shapes.iterator();
         Rectangle rv = new Rectangle();
         rv.setRect(iter.next().getBounds2D());
 
@@ -271,16 +273,15 @@ public class Utils {
         }
     }
 
-	public static BufferedImage pageConvertToImage(PDPage page, int dpi, ImageType imageType) throws IOException {
+	public static Bitmap pageConvertToImage(PDPage page, int dpi, ImageType imageType) throws IOException {
 		try (PDDocument document = new PDDocument()) {
 			document.addPage(page);
 			PDFRenderer renderer = new PDFRenderer(document);
-			document.close();
 			return renderer.renderImageWithDPI(0, dpi, imageType);
 		}
 	}
 
-  public static BufferedImage pageConvertToImage(PDDocument doc, PDPage page, int dpi, ImageType imageType) throws IOException {
+  public static Bitmap pageConvertToImage(PDDocument doc, PDPage page, int dpi, ImageType imageType) throws IOException {
     PDFRenderer renderer = new PDFRenderer(doc);
     return renderer.renderImageWithDPI(doc.getPages().indexOf(page), dpi, imageType);
   }

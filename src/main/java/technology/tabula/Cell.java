@@ -1,7 +1,8 @@
 package technology.tabula;
 
-import java.awt.geom.Point2D;
 import java.util.Collections;
+
+import technology.tabula.geom.Point2D;
 
 @SuppressWarnings("serial")
 public class Cell extends RectangularTextContainer<TextChunk> {

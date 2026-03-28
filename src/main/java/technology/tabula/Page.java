@@ -1,13 +1,14 @@
 package technology.tabula;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+
+import technology.tabula.geom.Point2D;
 
 import static java.lang.Float.compare;
 import static java.util.Collections.min;

@@ -1,25 +1,27 @@
 package technology.tabula.detectors;
 
-import org.apache.pdfbox.contentstream.PDContentStream;
-import org.apache.pdfbox.contentstream.operator.Operator;
-import org.apache.pdfbox.contentstream.operator.OperatorName;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdfparser.PDFStreamParser;
-import org.apache.pdfbox.pdfwriter.ContentStreamWriter;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.rendering.ImageType;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+
+import com.tom_roush.pdfbox.contentstream.PDContentStream;
+import com.tom_roush.pdfbox.contentstream.operator.Operator;
+import com.tom_roush.pdfbox.contentstream.operator.OperatorName;
+import com.tom_roush.pdfbox.cos.COSName;
+import com.tom_roush.pdfbox.pdfparser.PDFStreamParser;
+import com.tom_roush.pdfbox.pdfwriter.ContentStreamWriter;
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.pdmodel.common.PDStream;
+import com.tom_roush.pdfbox.rendering.ImageType;
 import technology.tabula.*;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+
+import technology.tabula.geom.Line2D;
+import technology.tabula.geom.Point2D;
 
 /**
  * Created by matt on 2015-12-17.
@@ -90,7 +92,7 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
         // we get these from an image of the PDF and not the PDF itself because sometimes there are invisible PDF
         // instructions that are interpreted incorrectly as visible elements - we really want to capture what a
         // person sees when they look at the PDF
-        BufferedImage image;
+        Bitmap image;
         PDPage pdfPage = page.getPDPage();
         try {
             image = Utils.pageConvertToImage(page.getPDDoc(), pdfPage, 144, ImageType.GRAY);
@@ -668,25 +670,24 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
         return tableAreas;
     }
 
-    private List<Ruling> getHorizontalRulings(BufferedImage image) {
+    private List<Ruling> getHorizontalRulings(Bitmap image) {
 
         // get all horizontal edges, which we'll define as a change in grayscale colour
         // along a straight line of a certain length
         ArrayList<Ruling> horizontalRulings = new ArrayList<>();
 
-        Raster r = image.getRaster();
-        int width = r.getWidth();
-        int height = r.getHeight();
+        int width = image.getWidth();
+        int height = image.getHeight();
 
         for (int x = 0; x < width; x++) {
 
-            int[] lastPixel = r.getPixel(x, 0, (int[]) null);
+            int lastPixel = grayscaleAt(image, x, 0);
 
             for (int y = 1; y < height - 1; y++) {
 
-                int[] currPixel = r.getPixel(x, y, (int[]) null);
+                int currPixel = grayscaleAt(image, x, y);
 
-                int diff = Math.abs(currPixel[0] - lastPixel[0]);
+                int diff = Math.abs(currPixel - lastPixel);
                 if (diff > GRAYSCALE_INTENSITY_THRESHOLD) {
                     // we hit what could be a line
                     // don't bother scanning it if we've hit a pixel in the line before
@@ -706,11 +707,11 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
                     int lineX = x + 1;
 
                     while (lineX < width) {
-                        int[] linePixel = r.getPixel(lineX, y, (int[]) null);
-                        int[] abovePixel = r.getPixel(lineX, y - 1, (int[]) null);
+                        int linePixel = grayscaleAt(image, lineX, y);
+                        int abovePixel = grayscaleAt(image, lineX, y - 1);
 
-                        if (Math.abs(linePixel[0] - abovePixel[0]) <= GRAYSCALE_INTENSITY_THRESHOLD
-                                || Math.abs(currPixel[0] - linePixel[0]) > GRAYSCALE_INTENSITY_THRESHOLD) {
+                        if (Math.abs(linePixel - abovePixel) <= GRAYSCALE_INTENSITY_THRESHOLD
+                                || Math.abs(currPixel - linePixel) > GRAYSCALE_INTENSITY_THRESHOLD) {
                             break;
                         }
 
@@ -731,25 +732,24 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
         return horizontalRulings;
     }
 
-    private List<Ruling> getVerticalRulings(BufferedImage image) {
+    private List<Ruling> getVerticalRulings(Bitmap image) {
 
         // get all vertical edges, which we'll define as a change in grayscale colour
         // along a straight line of a certain length
         ArrayList<Ruling> verticalRulings = new ArrayList<>();
 
-        Raster r = image.getRaster();
-        int width = r.getWidth();
-        int height = r.getHeight();
+        int width = image.getWidth();
+        int height = image.getHeight();
 
         for (int y = 0; y < height; y++) {
 
-            int[] lastPixel = r.getPixel(0, y, (int[]) null);
+            int lastPixel = grayscaleAt(image, 0, y);
 
             for (int x = 1; x < width - 1; x++) {
 
-                int[] currPixel = r.getPixel(x, y, (int[]) null);
+                int currPixel = grayscaleAt(image, x, y);
 
-                int diff = Math.abs(currPixel[0] - lastPixel[0]);
+                int diff = Math.abs(currPixel - lastPixel);
                 if (diff > GRAYSCALE_INTENSITY_THRESHOLD) {
                     // we hit what could be a line
                     // don't bother scanning it if we've hit a pixel in the line before
@@ -769,11 +769,11 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
                     int lineY = y + 1;
 
                     while (lineY < height) {
-                        int[] linePixel = r.getPixel(x, lineY, (int[]) null);
-                        int[] leftPixel = r.getPixel(x - 1, lineY, (int[]) null);
+                        int linePixel = grayscaleAt(image, x, lineY);
+                        int leftPixel = grayscaleAt(image, x - 1, lineY);
 
-                        if (Math.abs(linePixel[0] - leftPixel[0]) <= GRAYSCALE_INTENSITY_THRESHOLD
-                                || Math.abs(currPixel[0] - linePixel[0]) > GRAYSCALE_INTENSITY_THRESHOLD) {
+                        if (Math.abs(linePixel - leftPixel) <= GRAYSCALE_INTENSITY_THRESHOLD
+                                || Math.abs(currPixel - linePixel) > GRAYSCALE_INTENSITY_THRESHOLD) {
                             break;
                         }
 
@@ -792,6 +792,10 @@ public class NurminenDetectionAlgorithm implements DetectionAlgorithm {
         }
 
         return verticalRulings;
+    }
+
+    private int grayscaleAt(Bitmap image, int x, int y) {
+        return Color.red(image.getPixel(x, y));
     }
 
     private PDDocument removeText(PDPage page) throws IOException {

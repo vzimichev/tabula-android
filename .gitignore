@@ -6,4 +6,8 @@
 /src/test/**/*.jpg
 /src/test/resources/technology/tabula/icdar2013-dataset/test-statistics.json
 /target/
+/build/
+**/build/
+/.gradle/
+/local.properties
 *.iml
