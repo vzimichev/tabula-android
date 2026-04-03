@@ -3,7 +3,8 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByName
 
 plugins {
-    id("com.android.library") version "8.6.1"
+    id("com.android.application") version "8.5.2" apply false
+    id("com.android.library") version "8.5.2"
     id("maven-publish")
 }
 
