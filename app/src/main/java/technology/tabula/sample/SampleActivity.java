@@ -2,6 +2,7 @@ package technology.tabula.sample;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -13,6 +14,8 @@ import com.google.android.material.button.MaterialButton;
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -27,6 +30,9 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 import technology.tabula.writers.CSVWriter;
 
 public class SampleActivity extends AppCompatActivity {
+
+    public static final String EXTRA_INTERNAL_FILE = "technology.tabula.sample.EXTRA_INTERNAL_FILE";
+    public static final String EXTRA_EXTERNAL_FILE = "technology.tabula.sample.EXTRA_EXTERNAL_FILE";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -60,12 +66,21 @@ public class SampleActivity extends AppCompatActivity {
                 return "Bundled AnimalSounds.pdf";
             }
         }));
+
+        maybeHandleLaunchIntent();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         executor.shutdownNow();
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        maybeHandleLaunchIntent();
     }
 
     private void onPdfSelected(@Nullable Uri uri) {
@@ -90,6 +105,59 @@ public class SampleActivity extends AppCompatActivity {
         });
     }
 
+    private void maybeHandleLaunchIntent() {
+        String internalFile = getIntent().getStringExtra(EXTRA_INTERNAL_FILE);
+        if (internalFile == null || internalFile.isEmpty()) {
+            String externalFile = getIntent().getStringExtra(EXTRA_EXTERNAL_FILE);
+            if (externalFile == null || externalFile.isEmpty()) {
+                return;
+            }
+
+            File file = new File(externalFile);
+            if (!file.isFile()) {
+                statusText.setText("Extraction failed.");
+                outputText.setText("Missing file: " + externalFile);
+                return;
+            }
+
+            runExtraction(new InputStreamProvider() {
+                @Override
+                public InputStream open() throws IOException {
+                    ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(Uri.fromFile(file), "r");
+                    if (pfd == null) {
+                        throw new IOException("Unable to open external file");
+                    }
+                    return new FileInputStream(pfd.getFileDescriptor());
+                }
+
+                @Override
+                public String label() {
+                    return file.getAbsolutePath();
+                }
+            });
+            return;
+        }
+
+        File file = new File(internalFile);
+        if (!file.isFile()) {
+            statusText.setText("Extraction failed.");
+            outputText.setText("Missing file: " + internalFile);
+            return;
+        }
+
+        runExtraction(new InputStreamProvider() {
+            @Override
+            public InputStream open() throws IOException {
+                return new FileInputStream(file);
+            }
+
+            @Override
+            public String label() {
+                return file.getAbsolutePath();
+            }
+        });
+    }
+
     private void runExtraction(InputStreamProvider provider) {
         statusText.setText("Extracting " + provider.label() + " ...");
         outputText.setText("");
@@ -107,12 +175,9 @@ public class SampleActivity extends AppCompatActivity {
                 int tableCount = 0;
                 for (int pageIndex = 1; pageIndex <= document.getNumberOfPages(); pageIndex++) {
                     Page page = extractor.extract(pageIndex);
-                    List<Table> tables = spreadsheet.extract(page);
-                    String mode = "lattice";
-                    if (tables.isEmpty()) {
-                        tables = basic.extract(page);
-                        mode = "stream";
-                    }
+                    boolean useSpreadsheet = spreadsheet.isTabular(page);
+                    List<Table> tables = useSpreadsheet ? spreadsheet.extract(page) : basic.extract(page);
+                    String mode = useSpreadsheet ? "lattice" : "stream";
                     if (tables.isEmpty()) {
                         continue;
                     }

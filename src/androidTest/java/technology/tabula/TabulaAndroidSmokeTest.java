@@ -43,6 +43,24 @@ public class TabulaAndroidSmokeTest {
         assertTrue("Expected at least one extracted table from spanning_cells.pdf", summary.tableCount > 0);
     }
 
+    @Test
+    public void extractsMeaningfulContentFromLocalRaspBasisPdf() throws Exception {
+        ExtractionSummary summary = extractCsvFromAsset("technology/tabula/rasp-basis.pdf");
+        assertCsvContains(summary.csv, "გადახდის თარიღი", "4/14/2026", "70,440.91");
+    }
+
+    @Test
+    public void extractsAtLeastOneTableFromLocalRaspBogPdf() throws Exception {
+        ExtractionSummary summary = extractCsvFromAsset("technology/tabula/rasp-bog.pdf");
+        assertTrue("Expected at least one extracted table from rasp-bog.pdf", summary.tableCount > 0);
+    }
+
+    @Test
+    public void extractsAtLeastOneTableFromLocalRaspBogOnePdf() throws Exception {
+        ExtractionSummary summary = extractCsvFromAsset("technology/tabula/rasp-bog-1.pdf");
+        assertTrue("Expected at least one extracted table from rasp-bog-1.pdf", summary.tableCount > 0);
+    }
+
     private ExtractionSummary extractCsvFromAsset(String assetPath) throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         PDFBoxResourceLoader.init(context);
@@ -58,10 +76,8 @@ public class TabulaAndroidSmokeTest {
 
             for (int pageNumber = 1; pageNumber <= document.getNumberOfPages(); pageNumber++) {
                 Page page = extractor.extract(pageNumber);
-                List<Table> tables = spreadsheet.extract(page);
-                if (tables.isEmpty()) {
-                    tables = basic.extract(page);
-                }
+                boolean useSpreadsheet = spreadsheet.isTabular(page);
+                List<Table> tables = useSpreadsheet ? spreadsheet.extract(page) : basic.extract(page);
                 if (tables.isEmpty()) {
                     continue;
                 }
